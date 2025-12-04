@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dept. - Academic & Administration</title>
+    <style>
+        /* CSS adapted for Departmental role */
+        :root {
+            --primary: #4CAF50; --primary-dark: #388E3C; --accent: #2196F3; --accent-dark: #1976D2; --background-dark: #2c3e50; --background-light: #ecf0f1; --text-light: #ecf0f1; --text-dark: #34495e; --glass-bg: rgba(255, 255, 255, 0.15); --glass-border: rgba(255, 255, 255, 0.3);
+            --status-low: #f39c12; --status-medium: #2980b9; --status-high: #c0392b; --status-success: #27ae60;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, var(--background-dark) 0%, #1a242f 100%); color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; }
+        .header { background-color: rgba(0, 0, 0, 0.3); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); z-index: 100; }
+        .nav-logo { font-size: 1.8rem; font-weight: 700; color: var(--text-light); }
+        .nav-logo span { color: var(--primary); font-weight: 900; }
+        .nav-links a { color: var(--text-light); text-decoration: none; margin-left: 20px; padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
+        .nav-links a:hover { background-color: var(--primary-dark); color: var(--background-light); }
+        .nav-links .active { background-color: var(--primary); color: var(--background-light); font-weight: 600; }
+        main { flex-grow: 1; padding: 20px; }
+        .container-full { width: 95%; margin: 20px auto; }
+        .glass-card { background: var(--glass-bg); border-radius: 15px; border: 1px solid var(--glass-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 40px; }
+        h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 5px; color: var(--primary); }
+        .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; margin-top: 50px; }
+        .loader-glow { width: 60px; height: 60px; border: 5px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--primary); }
+        .loader-text { margin-top: 20px; font-size: 1.1rem; color: var(--text-light); opacity: 0.9; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { 100% { opacity: 1; transform: translateY(0); } }
+        main.glass-card { transform: translateY(20px); }
+        .table-wrapper { overflow-x: auto; margin-top: 30px; border-radius: 10px; border: 1px solid var(--glass-border); }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 1200px; }
+        .data-table thead { background-color: var(--primary-dark); color: var(--background-light); }
+        .data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .data-table tbody tr { transition: background-color 0.3s; }
+        .data-table tbody tr:nth-child(even) { background-color: rgba(0, 0, 0, 0.1); }
+        .data-table tbody tr:hover { background-color: rgba(0, 0, 0, 0.2); }
+        .data-table th.feedback-text, .data-table td.feedback-text { width: 30%; max-width: 400px; white-space: normal; word-wrap: break-word; font-size: 0.85rem; }
+        .status-tag { display: inline-block; padding: 5px 10px; border-radius: 5px; font-weight: 600; font-size: 0.85rem; color: var(--text-dark); }
+        .status-Pending { background-color: var(--status-low); }
+        .status-In-Progress { background-color: var(--status-medium); color: var(--text-light); }
+        .status-Resolved { background-color: var(--status-success); }
+        .status-select { padding: 8px 10px; border-radius: 5px; border: 1px solid var(--primary); background-color: rgba(255, 255, 255, 0.9); color: var(--text-dark); cursor: pointer; font-size: 0.85rem; outline: none; transition: border-color 0.3s; }
+        .status-select:focus { border-color: var(--accent); box-shadow: 0 0 5px rgba(33, 150, 243, 0.5); }
+        .btn-save { background-color: var(--accent); color: var(--text-light); border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; transition: background-color 0.3s, transform 0.1s; font-size: 0.9rem; margin-right: 10px; }
+        .btn-save:hover { background-color: var(--accent-dark); }
+        .btn-save:active { transform: scale(0.98); }
+        .status-msg { display: inline-block; opacity: 0; transition: opacity 0.3s ease-in-out; margin-left: 5px; font-size: 0.85rem; font-weight: 600; color: var(--accent-dark); min-width: 60px; }
+        .status-msg.show { opacity: 1; }
+        .status-msg.success { color: var(--status-success); }
+        .status-msg.error { color: var(--status-high); }
+        .footer { background-color: rgba(0, 0, 0, 0.3); color: var(--text-light); padding: 15px 30px; text-align: center; font-size: 0.9rem; margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+        .footer-links a { color: var(--primary); text-decoration: none; margin-left: 15px; transition: color 0.3s; }
+        .footer-links a:hover { color: var(--primary-dark); }
+        .btn-logout { background-color: var(--status-high); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; transition: background-color 0.3s; }
+        .btn-logout:hover { background-color: #a93226; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-logo">Academic<span>Desk</span></div>
+        <nav class="nav-links">
+            <button class="btn-logout text-white" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <main class="glass-card container-full" style="max-width: 1400px; margin-top: 20px; animation: slideUp 0.8s ease forwards; opacity: 0;">
+        <h1>Academic & Administration Feedbacks</h1>
+        <p style="text-align: left; margin-top: -15px; font-size: 1rem; opacity: 0.8;">
+            Feedback routed to this department. Update status here.
+        </p>
+        
+        <div id="loaderContainer" class="loader-container">
+            <div class="loader-glow"></div>
+            <p id="loaderText" class="loader-text">Fetching assigned Feedbacks...</p>
+        </div>
+        
+        <div class="table-wrapper" id="tableContainer" style="display:none;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ticket No. (ID)</th>
+                        <th>Student Name</th>
+                        <th>USN</th>
+                        <th>Student Dept</th>
+                        <th class="feedback-text">Feedback Text(s)</th>
+                        <th>Current Status</th>
+                        <th>Set New Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div>&copy; 2025 Smart Feedback Classifier</div>
+        <div class="footer-links">
+            <a href="mailto:help@pesitm.edu.in">Helpdesk</a>
+        </div>
+    </footer>
+
+    <script>
+        const REQUIRED_ROLE = 'academic';
+        const DEPARTMENT_FILTER = 'Academic & Administration';
+
+        function checkAuth() {
+            const role = sessionStorage.getItem('userRole');
+            if (role !== REQUIRED_ROLE) {
+                window.location.href = 'admin_login.html';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('userRole');
+            window.location.href = 'admin_login.html';
+        }
+        
+        const AIRTABLE_API_KEY = 'patXtftaY4JZM7tyH.de544f6763e2a122f30f27220a794c05699088119f7b31561e1d0d492a343f85';
+        const AIRTABLE_BASE_ID = 'appLHQZ8AO3UggeWt';
+        const AIRTABLE_TABLE_NAME = 'Feedbacks';
+        const API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`;
+        const headers = {
+            'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json'
+        };
+
+        window.onload = function() {
+            checkAuth();
+            fetchFilteredData();
+        };
+
+        async function fetchFilteredData() {
+            const spinner = document.getElementById('loaderContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            try {
+                const filter = `filterByFormula=({Responsible Department}="${DEPARTMENT_FILTER}")`;
+                const sort = `sort%5B0%5D%5Bfield%5D=Status&sort%5B0%5D%5Bdirection%5D=asc`;
+                const fetchURL = `${API_URL}?${filter}&${sort}`;
+                
+                const response = await fetch(fetchURL, { headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` } });
+                if (!response.ok) throw new Error(`Airtable API Error: ${response.statusText}`);
+                
+                const json = await response.json();
+                const records = json.records || [];
+                
+                if (records.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No tickets found for this department.</td></tr>';
+                }
+
+                records.forEach(record => {
+                    const fields = record.fields;
+                    const recordId = record.id;
+                    
+                    // --- TICKET NUMBER FIX ---
+                    const ticketDisplayId = fields['Ticket Number'] || recordId;
+                    // --- END FIX ---
+
+                    let remarks = [];
+                    for (const key in fields) {
+                        if (key.startsWith('Remarks') && fields[key]) {
+                            remarks.push(String(fields[key]).trim());
+                        }
+                    }
+                    if (fields['15.Other (Any specific suggestion for improvement)']) {
+                        remarks.push(String(fields['15.Other (Any specific suggestion for improvement)']).trim());
+                    }
+                    const feedbackText = remarks.length > 0 ? remarks.join(', ') : '';
+
+                    if (feedbackText === '') {
+                        return;
+                    }
+
+                    const currentStatus = fields['Status'] || 'Pending';
+                    
+                    const row = document.createElement('tr');
+                    row.id = `row-${recordId}`;
+                    row.innerHTML = `
+                        <td>${ticketDisplayId}</td> 
+                        <td>${fields['Name'] || 'Student'}</td>
+                        <td>${fields['USN'] || 'N/A'}</td>
+                        <td>${fields['Department'] || 'N/A'}</td>
+                        <td class="feedback-text">${feedbackText}</td>
+                        <td>
+                            <span id="status-text-${recordId}" class="status-tag status-${currentStatus.replace(' ', '-')}">
+                                ${currentStatus}
+                            </span>
+                        </td>
+                        <td>
+                            <select id="select-status-${recordId}" class="status-select">
+                                <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="In Progress" ${currentStatus === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Resolved" ${currentStatus === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn-save" onclick="updateStatus('${recordId}')">Update</button>
+                            <span id="msg-${recordId}" class="status-msg"></span>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                spinner.style.display = 'none';
+                tableContainer.style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                spinner.style.display = 'none';
+                tableContainer.innerHTML = `<p style="color:var(--status-high); text-align:center; padding: 20px;"><b>Error fetching data:</b> ${error.message}</p>`;
+                tableContainer.style.display = 'block';
+            }
+        }
+
+        async function updateStatus(recordId) {
+            const statusSelectEl = document.getElementById(`select-status-${recordId}`);
+            const newStatus = statusSelectEl.value;
+            
+            const msgEl = document.getElementById(`msg-${recordId}`);
+            const statusTextEl = document.getElementById(`status-text-${recordId}`);
+
+            msgEl.innerText = 'Saving...';
+            msgEl.className = 'status-msg show';
+            msgEl.style.color = 'var(--accent-dark)';
+
+            try {
+                const payload = { 
+                    records: [{ 
+                        id: recordId, 
+                        fields: { 'Status': newStatus } 
+                    }] 
+                };
+
+                const response = await fetch(API_URL, {
+                    method: 'PATCH',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error.message || `Airtable API Error: ${response.statusText}`);
+                }
+                
+                msgEl.innerText = '✓ Saved!';
+                msgEl.className = 'status-msg show success';
+                statusTextEl.innerText = newStatus;
+                statusTextEl.className = `status-tag status-${newStatus.replace(' ', '-')}`;
+
+            } catch (error) {
+                console.error("Update failed:", error);
+                msgEl.innerText = 'Error!';
+                msgEl.className = 'status-msg show error';
+            }
+            setTimeout(() => { msgEl.className = 'status-msg'; }, 3000);
+        }
+    </script>
+</body>
+</html>

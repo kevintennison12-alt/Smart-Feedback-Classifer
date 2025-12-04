@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusPulse - AI Feedback Classifier</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="page-loader">
+    <div class="loader-glow"></div>
+    <p class="loader-text" style="color: #fff;">Initializing CampusPulse Engine...</p>
+  </div>
+  
+  <div class="page-background">
+    <canvas id="particle-canvas"></canvas>
+  </div>
+
+  <header class="header">
+    <div class="nav-logo">Campus<span>Pulse</span></div>
+    <nav class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="student.html">Student Portal</a>
+        <a href="admin.html">Admin Login</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero-section">
+      <h1 class="hero-title">
+        Campus Pulse
+      </h1>
+      <p class="hero-subtitle">
+        Measuring Student Satisfaction and Engagement.<br>
+
+        Real-time insights, automated classification, and streamlined resolutions.
+      </p>
+      <div class="hero-buttons">
+        <a href="admin.html" class="btn-glass primary">Admin Login</a>
+        <a href="student.html" class="btn-glass">Student Portal</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+      <div>&copy; 2025 Smart Feedback Classifier</div>
+      <div class="footer-links">
+        <a href="mailto:help@pesitm.edu.in">Helpdesk</a>
+        <a href="#">About</a>
+      </div>
+  </footer>
+
+  <script>
+    // --- Page Loader Script ---
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('page-loader');
+      setTimeout(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 500); // Fade out duration
+      }, 1500); // Minimum load time
+    });
+
+    // --- Optional Particle Animation Script ---
+    const canvas = document.getElementById('particle-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      let particles = [];
+      const particleCount = 70;
+      const color = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches 
+                    ? 'rgba(0, 255, 255, 0.5)' 
+                    : 'rgba(255, 255, 255, 0.5)';
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 1;
+          this.speedX = Math.random() * 1 - 0.5;
+          this.speedY = Math.random() * 1 - 0.5;
+        }
+        update() {
+          if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+          if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+          this.x += this.speedX;
+          this.y += this.speedY;
+        }
+        draw() {
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+        }
+      }
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let particle of particles) {
+          particle.update();
+          particle.draw();
+        }
+        requestAnimationFrame(animateParticles);
+      }
+
+      initParticles();
+      animateParticles();
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initParticles();
+      });
+    }
+  </script>
+</body>
+</html>

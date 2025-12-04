@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - CampusPulse</title>
+    <style>
+        /* Integrated CSS based on previous styles */
+        :root {
+            --primary: #4CAF50;       
+            --primary-dark: #388E3C;
+            --accent: #2196F3;
+            --accent-dark: #1976D2;
+            --background-dark: #2c3e50; 
+            --background-light: #ecf0f1;
+            --text-light: #ecf0f1;
+            --text-dark: #34495e;
+            --glass-bg: rgba(255, 255, 255, 0.15); 
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --status-high: #c0392b; /* Error color */
+            --page-bg: linear-gradient(135deg, #1a242f 0%, #0f172a 100%);
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: var(--page-bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .header {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
+        .nav-logo { font-size: 1.8rem; font-weight: 700; color: var(--text-light); }
+        .nav-logo span { color: var(--primary); font-weight: 900; }
+        .nav-links a { 
+            color: var(--text-light); text-decoration: none; margin-left: 20px; 
+            padding: 8px 12px; border-radius: 5px; transition: background-color 0.3s;
+        }
+        .nav-links a.active { background-color: var(--primary); color: var(--background-light); }
+
+        .glass-card-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            padding-top: 100px; /* Space for fixed header */
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text-light);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
+        }
+        .btn-glow {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #7b68ee, var(--accent));
+            color: var(--text-light);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+            margin-bottom: 15px;
+        }
+        .btn-glow:hover {
+            opacity: 0.9;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        /* Style for the role selection buttons */
+        .role-button {
+            background-color: var(--primary-dark);
+            border: none;
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            border-radius: 8px;
+            color: var(--text-light);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .role-button:hover {
+            background-color: var(--primary);
+        }
+
+        #loginResult {
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+        }
+        .loader-glow {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-text {
+            margin-top: 10px;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text-light);
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: auto;
+            width: 100%;
+        }
+        .footer-links a { color: var(--primary); text-decoration: none; margin-left: 15px; }
+        .footer-links a:hover { color: var(--primary-dark); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-logo">Campus<span>Pulse</span></div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="student.html">Student Portal</a>
+            <a href="admin_login.html" class="active">Admin Login</a>
+        </nav>
+    </header>
+
+    <main class="glass-card-container">
+        <div class="glass-card" id="loginCard">
+            <h2 id="cardTitle">Login Portal </h2>
+            
+            <!-- 1. Role Selection Buttons -->
+            <div id="roleSelection" style="display:flex; flex-direction:column; gap:10px;">
+                <button class="role-button" onclick="showLoginForm('admin')">Main Admin Portal</button>
+                <button class="role-button" onclick="showLoginForm('acad')">Academic & Administration</button>
+                <button class="role-button" onclick="showLoginForm('service')">Core Campus Services</button>
+                <button class="role-button" onclick="showLoginForm('env')">Campus Environment & Culture</button>
+            </div>
+
+            <!-- 2. Login Form (Initially hidden) -->
+            <form id="loginForm" onsubmit="event.preventDefault(); adminLogin()" style="display:none;">
+                <div class="input-group">
+                    <input type="text" placeholder="Username" id="adminUser" class="input-field" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" placeholder="Password" id="adminPass" class="input-field" required>
+                </div>
+                <button type="submit" class="btn-glow">Authenticate</button>
+                <p id="loginResult"></p>
+                <button type="button" class="role-button" onclick="showRoleSelection()">← Back to Role Selection</button>
+            </form>
+
+            <div id="loaderContainer" class="loader-container" style="display:none;">
+                <div class="loader-glow"></div>
+                <p id="loaderText" class="loader-text">Authenticating...</p>
+            </div>
+            
+            <input type="hidden" id="currentRole">
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div>&copy; 2025 Smart Feedback Classifier</div>
+        <div class="footer-links">
+            <a href="mailto:help@pesitm.edu.in">Helpdesk</a>
+        </div>
+    </footer>
+
+    <script>
+        // Role-based login credentials and redirects
+        const CREDENTIALS = {
+            // Main Admin uses 'admin' username and '1234' password
+            'admin': { password: '1234', redirect: 'dashboard.html', title: 'Full Admin Portal' }, 
+            // Departmental Logins require matching username/password
+            'acad': { password: 'acad123', redirect: 'academic_admin.html', title: 'Academic Login' },
+            'service': { password: 'serv123', redirect: 'campus_services.html', title: 'Services Login' },
+            'env': { password: 'env123', redirect: 'campus_env.html', title: 'Environment Login' }
+        };
+
+        const resultEl = document.getElementById("loginResult");
+        const loginForm = document.getElementById("loginForm");
+        const roleSelection = document.getElementById("roleSelection");
+        const cardTitle = document.getElementById("cardTitle");
+        const currentRoleInput = document.getElementById("currentRole");
+        const loaderContainer = document.getElementById("loaderContainer");
+        const loaderText = document.getElementById("loaderText");
+        
+        // --- UI Control Functions ---
+
+        function showLoginForm(roleKey) {
+            const role = CREDENTIALS[roleKey];
+            if (!role) return;
+
+            // Update UI for login form
+            cardTitle.innerText = role.title;
+            roleSelection.style.display = 'none';
+            loginForm.style.display = 'block';
+            resultEl.innerText = ''; // Clear previous messages
+            
+            // Store the selected role in a hidden field
+            currentRoleInput.value = roleKey;
+            
+            // Clear input fields when switching forms
+            document.getElementById("adminUser").value = '';
+            document.getElementById("adminPass").value = '';
+            document.getElementById("adminUser").focus();
+        }
+
+        function showRoleSelection() {
+            cardTitle.innerText = 'Login Portal Selection';
+            loginForm.style.display = 'none';
+            roleSelection.style.display = 'flex';
+            resultEl.innerText = '';
+        }
+
+        // --- Authentication Function ---
+
+        function adminLogin() {
+            const user = document.getElementById("adminUser").value.trim();
+            const pass = document.getElementById("adminPass").value.trim();
+            const roleKey = currentRoleInput.value;
+
+            const loginInfo = CREDENTIALS[roleKey];
+            
+            let authenticated = false;
+
+            if (roleKey === 'admin') {
+                // Check specific Admin credentials: admin/1234
+                if (user === 'admin' && pass === loginInfo.password) {
+                    authenticated = true;
+                }
+            } else {
+                // Check departmental credentials: username must match roleKey (e.g., acad) AND password must match
+                if (user === roleKey && pass === loginInfo.password) {
+                    authenticated = true;
+                }
+            }
+
+            if (authenticated) {
+                // Map roleKey to session role string
+                const sessionRole = (roleKey === 'admin') ? 'admin' : 
+                                   (roleKey === 'acad') ? 'academic' : 
+                                   (roleKey === 'service') ? 'services' : 
+                                   (roleKey === 'env') ? 'environment' : 'guest';
+
+                sessionStorage.setItem('userRole', sessionRole);
+                
+                resultEl.innerText = "";
+                loginForm.style.display = "none";
+                loaderContainer.style.display = "flex";
+                
+                loaderText.innerText = "🔄 Authenticating...";
+                
+                // Simulating process time before redirect
+                setTimeout(() => {
+                    loaderText.innerText = "📊 Loading portal...";
+                }, 1500);
+                
+                setTimeout(() => {
+                    window.location.href = loginInfo.redirect; 
+                }, 3000);
+
+            } else {
+                resultEl.innerText = "❌ Invalid username or password!";
+                resultEl.style.color = "var(--status-high)";
+            }
+        }
+        
+        // Initialize: Show role selection when the page loads
+        document.addEventListener('DOMContentLoaded', showRoleSelection);
+    </script>
+</body>
+</html>

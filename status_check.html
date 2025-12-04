@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Status - CampusPulse</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Page-specific styles */
+    #result {
+      margin-top: 25px;
+      font-weight: 500;
+      text-align: left;
+      line-height: 1.6;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--border-color-light);
+      display: none;
+    }
+    @media (prefers-color-scheme: dark) {
+      #result {
+        background: rgba(0,0,30,0.4);
+        border: 1px solid var(--border-color-dark);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-background">
+    <canvas id="particle-canvas"></canvas>
+  </div>
+
+  <header class="header">
+    <div class="nav-logo">Campus<span>Pulse</span></div>
+    <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="student.html">Student Portal</a>
+        <a href="admin.html">Admin Login</a>
+    </nav>
+  </header>
+
+  <main class="glass-card-container">
+    <div class="glass-card">
+      <h2>Track Complaint Status</h2>
+      <div class="input-group">
+        <input type="text" placeholder="Enter Ticket Number (e.g., FB-...)" id="ticketInput" class="input-field">
+      </div>
+      <button class="btn-glow" onclick="checkStatus()">Check Status</button>
+      <p id="result"></p>
+    </div>
+  </main>
+
+  <footer class="footer">
+      <div>&copy; 2025 Smart Feedback Classifier</div>
+      <div class="footer-links">
+        <a href="mailto:help@pesitm.edu.in">Helpdesk</a>
+      </div>
+  </footer>
+
+  <script>
+    // Your existing Apps Script URL
+    const AIRTABLE_STATUS_API_URL = 'https://script.google.com/macros/s/AKfycbx6JqgSKUm9EYpaqOx7Eu2eXvlk9UyIyGEUAXBA2HxNLZH9zS7b0HbUX3Pr5XwFLPBRIA/exec'; 
+    
+    function handleStatusResponse(data) {
+        const resultElement = document.getElementById("result");
+        const ticket = document.getElementById("ticketInput").value.trim();
+        resultElement.style.display = 'block';
+
+        if (data.success) {
+          const statusText = data.status || 'Not Set';
+          let statusColor = 'var(--status-pending)';
+          if (statusText === 'Resolved') statusColor = 'var(--status-resolved)';
+          if (statusText === 'In Progress') statusColor = 'var(--status-progress)';
+          
+          resultElement.style.color = 'inherit';
+          resultElement.innerHTML = 
+            `<strong>✅ Ticket Status Found</strong><br><br>` + 
+            `<b>Name:</b> ${data.name || 'Student'}<br>` + 
+            `<b>Ticket:</b> ${ticket}<br>` + 
+            `<b>Status:</b> <span style="color: ${statusColor}; font-weight: 700;">${statusText}</span>`;
+            
+        } else {
+          resultElement.innerHTML = `<strong>❌ Search Failed:</strong> ${data.status}`;
+          resultElement.style.color = 'var(--status-high)';
+        }
+    }
+
+    function checkStatus() {
+      const ticket = document.getElementById("ticketInput").value.trim();
+      const resultElement = document.getElementById("result");
+      resultElement.style.display = 'none';
+
+      if (!ticket) {
+        resultElement.innerHTML = "<strong>⚠️ Please enter your Ticket Number.</strong>";
+        resultElement.style.color = 'var(--status-high)';
+        resultElement.style.display = 'block';
+        return;
+      }
+      
+      resultElement.innerHTML = `⏳ Fetching Status...`;
+      resultElement.style.color = 'inherit';
+      resultElement.style.display = 'block';
+
+      const apiUrlWithCallback = `${AIRTABLE_STATUS_API_URL}?ticket=${encodeURIComponent(ticket)}&callback=handleStatusResponse`;
+
+      const script = document.createElement('script');
+      script.src = apiUrlWithCallback;
+      const oldScript = document.querySelector('script[src*="callback=handleStatusResponse"]');
+      if (oldScript) oldScript.remove();
+      document.body.appendChild(script);
+    }
+    // Particle script (copy from index.html if you want particles here too)
+  </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal - CampusPulse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-background">
+    <canvas id="particle-canvas"></canvas>
+  </div>
+
+  <header class="header">
+    <div class="nav-logo">Campus<span>Pulse</span></div>
+    <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="student.html" class="active">Student Portal</a>
+        <a href="admin.html">Admin Login</a>
+    </nav>
+  </header>
+
+  <main class="glass-card-container">
+    <div class="glass-card">
+      <h2>Student Portal</h2>
+      <div class="input-group">
+        <button class="btn-glow" onclick="submitComplaint()">Submit New Feedback</button>
+      </div>
+      <div class="input-group">
+        <button class="btn-glow" onclick="checkStatusPage()" style="background: rgba(255,255,255,0.2); border: 1px solid var(--border-color-light);">Check Complaint Status</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+      <div>&copy; 2025 Smart Feedback Classifier</div>
+      <div class="footer-links">
+        <a href="mailto:help@pesitm.edu.in">Helpdesk</a>
+      </div>
+  </footer>
+
+  <script>
+    // Airtable form URL
+    const AIRTABLE_FORM_URL = 'https://airtable.com/appLHQZ8AO3UggeWt/pagNjRQpp3H7GhNIb/form'; 
+    function submitComplaint() { window.location.href = AIRTABLE_FORM_URL; }
+    function checkStatusPage() { window.location.href = "status_check.html"; }
+    // Particle script (copy from index.html if you want particles here too)
+  </script>
+</body>
+</html>

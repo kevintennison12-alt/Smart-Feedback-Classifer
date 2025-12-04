@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Feedback Data - Campus Pulse</title>
+  <style>
+    /* ----------------------------------------------------
+       GLOBAL HEADER STYLING
+       ---------------------------------------------------- */
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #263238; /* Deep Navy Header */
+        color: white;
+        padding: 10px 40px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        z-index: 1000;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        font-family: 'Times New Roman', serif;
+    }
+    .nav-links {
+        display: flex;
+        gap: 20px;
+    }
+    .nav-links a {
+        color: #b0bec5; /* Light Grey Text */
+        text-decoration: none;
+        font-size: 1rem;
+        transition: color 0.3s;
+    }
+    .nav-links a:hover {
+        color: #40c4ff; /* Soft Blue Hover */
+    }
+    /* ----------------------------------------------------
+       GLOBAL FOOTER STYLING
+       ---------------------------------------------------- */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #263238; /* Deep Navy Footer */
+        color: #b0bec5;
+        padding: 10px 40px;
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+    }
+    .footer a {
+        color: #00bcd4;
+        text-decoration: none;
+        margin-left: 15px;
+        transition: color 0.3s;
+    }
+    .footer a:hover {
+        color: #40c4ff;
+    }
+    body {
+      padding-top: 70px;
+      padding-bottom: 40px;
+      margin: 0;
+      font-family: 'Times New Roman', serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 70px);
+      background: linear-gradient(135deg, #e0f7fa 0%, #f7f8f9 100%);
+      color: #333;
+      text-align: center;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      color: #263238;
+      opacity: 0;
+      transform: translateY(-20px);
+      animation: slideUp 1s ease forwards 0.3s;
+    }
+
+    p {
+      font-size: 1.2rem;
+      color: #455a64; 
+      margin-bottom: 30px;
+      opacity: 0;
+      transform: translateY(-20px);
+      animation: slideUp 1s ease forwards 0.6s;
+    }
+
+    /* Frosted Glass Card */
+    .card {
+      background: rgba(255, 255, 255, 0.98);
+      color: #333;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(38, 50, 56, 0.2);
+      backdrop-filter: blur(10px);
+      width: 450px;
+      max-width: 90%;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(-20px);
+      animation: slideUp 1s ease forwards 0.9s;
+      border: 1px solid rgba(0, 188, 212, 0.3);
+    }
+
+    /* Stylish Upload Box */
+    .upload-box {
+      border: 3px dashed #00bcd4; /* Teal Accent Dashed Border */
+      background: #f8f9fa; 
+      border-radius: 15px;
+      padding: 30px 20px;
+      margin-bottom: 25px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .upload-box:hover {
+      background: #e9ecef;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 15px auto 5px;
+      padding: 5px;
+      border: 1px solid #ced4da; 
+      border-radius: 8px;
+    }
+
+    /* Primary Button Styling */
+    .btn {
+      background: #00bcd4; /* Teal Accent Button */
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+    }
+
+    .btn:hover {
+      background: #40c4ff; /* Soft Blue on Hover */
+      transform: scale(1.05);
+      box-shadow: 0px 10px 20px rgba(0, 188, 212, 0.5);
+    }
+
+    .back-link {
+      margin-top: 30px;
+      font-size: 1rem;
+      color: #263238;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    .back-link:hover {
+      color: #00bcd4;
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="status_check.html">Status Check</a>
+        <a href="admin.html">Admin Login</a>
+    </nav>
+  </header>
+  
+  <h1>Upload Feedback Data</h1>
+  <p>Upload your CSV file for Data Preprocessing and Analytics Generation.</p>
+
+  <div class="card">
+    <div class="upload-box">
+      <p><strong>📂 Select Your CSV File</strong></p>
+      <p style="font-size: 0.9rem; color: #666;">Expected columns: Timestamp, Category, Rating, Remark, Urgency, Ticket Number</p>
+      <input type="file" id="fileInput" accept=".csv">
+    </div>
+    <button class="btn" onclick="uploadFile()">Process Data</button>
+    <p id="statusMsg" style="margin-top:15px; font-size:1rem;"></p>
+  </div>
+
+  <a href="index.html" class="back-link">← Return to Home Portal</a>
+
+  <footer class="footer">
+      <div>&copy; 2025 Smart Feedback Classifer. All Rights Reserved.</div>
+      <div>Contact: <a href="mailto:helpdesk@pesitm.edu.in">Helpdesk</a> | <a href="mailto:admin@pesitm.edu.in">Admin</a></div>
+  </footer>
+
+  <script>
+    function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const statusMsg = document.getElementById('statusMsg');
+      
+      if (fileInput.files.length === 0) {
+        statusMsg.innerText = "⚠️ Please select a file first.";
+        statusMsg.style.color = "red";
+      } else {
+        // Simulating the start of the data processing (Phase 3)
+        statusMsg.innerText = `⏳ Initiating Data Preprocessing for: ${fileInput.files[0].name}...`;
+        statusMsg.style.color = "orange";
+        
+        // Simulating the completion after a short delay
+        setTimeout(() => {
+             statusMsg.innerText = `✅ File successfully uploaded and ready for analysis!`;
+             statusMsg.style.color = "green";
+        }, 1500);
+      }
+    }
+  </script>
+</body>
+</html>

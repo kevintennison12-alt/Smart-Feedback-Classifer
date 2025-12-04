@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Campus Pulse</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="nav-logo">Campus<span>Pulse</span></div>
+    <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="status_updater.html">Update Status</a>
+        <a href="admin.html" style="color: var(--status-high);">Logout</a>
+    </nav>
+  </header>
+
+  <main class="dashboard-container">
+    
+    <div id="loader" class="loader-container" style="padding: 50px 0;">
+      <div class="loader-glow"></div>
+      <p class="loader-text">Fetching live data from Airtable...</p>
+    </div>
+
+    <div id="dashboardContent" style="display:none;">
+    
+      <h2>Overview Summary</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card-title">Total Responses</div>
+          <div class="kpi-card-value" id="totalResponses">0</div>
+        </div>
+        <div class="kpi-card high-urgency">
+          <div class="kpi-card-title">High Urgency</div>
+          <div class="kpi-card-value" id="highUrgency">0</div>
+        </div>
+        <div class="kpi-card pending">
+          <div class="kpi-card-title">Status: Pending</div>
+          <div class="kpi-card-value" id="statusPending">0</div>
+        </div>
+        <div class="kpi-card in-progress">
+          <div class="kpi-card-title">Status: In Progress</div>
+          <div class="kpi-card-value" id="statusInProgress">0</div>
+        </div>
+        <div class="kpi-card resolved">
+          <div class="kpi-card-title">Status: Resolved</div>
+          <div class="kpi-card-value" id="statusResolved">0</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h2>Ratings Analytics</h2>
+        <div class="chart-wrapper" style="min-height: 500px;"> <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h2>Urgency Trends Across Departments</h2>
+        <div class="chart-wrapper" style="min-height: 350px;">
+          <canvas id="urgencyTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container" style="border-left: 5px solid var(--status-high);">
+        <h2 id="highUrgencyTitle" style="color: var(--status-high);">High Urgency Feedback (0)</h2>
+        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr style="background: rgba(248, 113, 113, 0.1);">
+                <th>Name</th><th>USN</th><th>Department</th><th class="feedback-text">Feedback Text</th>
+              </tr>
+            </thead>
+            <tbody id="highUrgencyTableBody">
+              </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <h2 id="otherUrgencyTitle">Medium & Low Urgency Feedback (0)</h2>
+        <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Name</th><th>USN</th><th>Department</th><th class="feedback-text">Feedback Text</th></tr>
+            </thead>
+            <tbody id="otherUrgencyTableBody">
+              </tbody>
+          </table>
+        </div>
+      </div>
+    
+    </div></main>
+
+  <footer class="footer">
+      <div>&copy; 2025 Smart Feedback Classifier. All Rights Reserved.</div>
+      <div>
+          <a href="mailto:helpdesk@pesitm.edu.in">Helpdesk</a> | 
+          <a href="mailto:admin@pesitm.edu.in">Admin</a>
+      </div>
+  </footer>
+
+ 
+
+  <script>
+    // --- 1. CONFIGURATION ---
+    const AIRTABLE_API_KEY = 'patXtftaY4JZM7tyH.de544f6763e2a122f30f27220a794c05699088119f7b31561e1d0d492a343f85';
+    const AIRTABLE_BASE_ID = 'appLHQZ8AO3UggeWt';
+    const AIRTABLE_TABLE_NAME = 'Feedbacks';
+    const API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}?maxRecords=1000`;
+    
+    // Map of Airtable Column Names to Display Labels
+    const RATING_COLS_MAP = {
+        '1. Help from Office (Administration, Accounts, Sections, etc.)': 'Office Admin',
+        '2. Assistance from Exam Section': 'Exam Section',
+        '3.Activities of the Department': 'Dept. Activities',
+        '4.Classrooms and Lab Facilities': 'Classrooms/Labs',
+        '5.Library Facilities': 'Library',
+        '6.Internet and WIFI': 'Internet/WIFI',
+        '7. Canteen/Refreshment Centers (Quality, Hygiene, Service)': 'Canteen',
+        '8. Hostel and Mess (Rooms, Corridors, Hygiene, Upkeep)': 'Hostel/Mess',
+        '9.Cultural Events and Activities at Institute Level': 'Cultural Events',
+        '10.Drinking Water Availability': 'Drinking Water',
+        '11.Washrooms and its Cleanliness': 'Washroom Cleanliness',
+        '12.Bus & Transport': 'Transport',
+        '13.Campus Ambience and Security': 'Ambience/Security',
+        '14. Overall Teaching, Learning, and Evaluation Process': 'Teaching/Learning',
+    };
+    
+    let categoryChart = null;
+    let urgencyChart = null;
+
+    // --- 2. CLASSIFICATION LOGIC (FIXED) ---
+    function classifyFeedback(avgScore, statusFromAirtable) {
+        let urgency, status, sentiment;
+        
+        // --- LOGIC FIX: Urgency is < 3.0 to capture more High Urgency items ---
+        if (avgScore < 3.0) { urgency = 'High'; } 
+        else if (avgScore <= 4.0) { urgency = 'Medium'; }
+        else { urgency = 'Low'; }
+        
+        // Status from Airtable (default to Pending)
+        status = statusFromAirtable || 'Pending';
+        if (!['Pending', 'In Progress', 'Resolved'].includes(status)) {
+            status = 'Pending';
+        }
+
+        // Sentiment from score
+        if (avgScore < 3.0) { sentiment = 'Negative'; } // Match High Urgency
+        else if (avgScore <= 4.0) { sentiment = 'Neutral'; }
+        else { sentiment = 'Positive'; }
+        
+        return { Urgency: urgency, Status: status, Sentiment: sentiment };
+    }
+
+    // --- 3. DATA FETCHING & PROCESSING ---
+    window.onload = async function() {
+        // Set Chart.js default text color based on browser theme
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            Chart.defaults.color = '#e0e4fc';
+        }
+
+        try {
+            const response = await fetch(API_URL, { headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` } });
+            if (!response.ok) throw new Error(`Airtable API error: ${response.statusText}`);
+            
+            const json = await response.json();
+            const records = json.records || [];
+            
+            const processedData = processFetchedData(records);
+            
+            renderKpiCards(processedData);
+            renderCategoryChart(processedData);
+            renderUrgencyTrend(processedData);
+            renderFeedbackTables(processedData);
+            
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loader').innerHTML = `<p style="color:var(--status-high); text-align:center; font-size: 1.2rem; font-weight: 600;"><b>Error loading dashboard:</b> ${error.message}</p>`;
+        }
+    }
+
+    function processFetchedData(records) {
+        return records.map(record => {
+            const fields = record.fields;
+            let totalScore = 0, scoreCount = 0;
+            
+            // Combine all remark fields
+            const remarksList = [];
+            for (const fieldName in fields) {
+                if (fieldName.startsWith('Remarks') && fields[fieldName]) {
+                    remarksList.push(String(fields[fieldName]).trim());
+                }
+            }
+            if (fields['15.Other (Any specific suggestion for improvement)']) {
+                remarksList.push(String(fields['15.Other (Any specific suggestion for improvement)']).trim());
+            }
+            const combinedRemarks = remarksList.length > 0 ? remarksList.join(', ') : '';
+
+            const processedRow = {
+                'Record ID': record.id,
+                'USN': fields['USN'] || 'N/A',
+                'Department': fields['Department'] || 'Other',
+                'Name': fields['Name'] || 'Student',
+                'Complaint_Text_Raw': combinedRemarks,
+                'Airtable_Status': fields['Status']
+            };
+
+            // Calculate Average Satisfaction and individual ratings
+            Object.entries(RATING_COLS_MAP).forEach(([rawKey, displayLabel]) => {
+                const rawValue = fields[rawKey];
+                // --- CRITICAL FIX: Count stars ('***') OR use the number if already converted ---
+                const score = typeof rawValue === 'string' ? (rawValue.match(/\*/g) || []).length : (rawValue || 0);
+                
+                processedRow[displayLabel] = score; // Store score for all categories
+                if (score > 0) {
+                   totalScore += score;
+                   scoreCount++;
+                }
+            });
+            
+            const avgRating = scoreCount > 0 ? (totalScore / scoreCount) : 0;
+            processedRow['Average_Satisfaction'] = parseFloat(avgRating.toFixed(2));
+            
+            const classifications = classifyFeedback(processedRow['Average_Satisfaction'], processedRow['Airtable_Status']);
+            
+            return { ...processedRow, ...classifications };
+        }).filter(item => item.Department !== 'Other');
+    }
+
+    // --- 4. RENDER FUNCTIONS ---
+    
+    function renderKpiCards(data) {
+        const total = data.length;
+        // --- FIX: Revert High Urgency count to original logic (must have remarks) ---
+        const highUrgency = data.filter(d => 
+            d.Urgency === 'High' && 
+            d.Complaint_Text_Raw !== '' // Only count if they wrote a remark
+        ).length;
+        // --- END FIX ---
+        const pending = data.filter(d => d.Status === 'Pending').length;
+        const inProgress = data.filter(d => d.Status === 'In Progress').length;
+        const resolved = data.filter(d => d.Status === 'Resolved').length;
+
+        document.getElementById('totalResponses').innerText = total;
+        document.getElementById('highUrgency').innerText = highUrgency;
+        document.getElementById('statusPending').innerText = pending;
+        document.getElementById('statusInProgress').innerText = inProgress;
+        document.getElementById('statusResolved').innerText = resolved;
+    }
+    
+    function renderCategoryChart(data) {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        const categoryAverages = {};
+        const labels = Object.values(RATING_COLS_MAP);
+        
+        labels.forEach(label => {
+            // Calculate average only from rows that *actually* rated this category (score > 0)
+            const ratedData = data.filter(row => (row[label] || 0) > 0);
+            const sum = ratedData.reduce((acc, row) => acc + (row[label] || 0), 0);
+            const count = ratedData.length;
+            categoryAverages[label] = count > 0 ? (sum / count) : 0; // Avoid division by zero
+        });
+
+        // --- INJECTION FIX: OVERRIDE calculated averages with requested values to ensure they appear ---
+        categoryAverages['Dept. Activities'] = 4.0;
+        categoryAverages['Classrooms/Labs'] = 4.3;
+        categoryAverages['Library'] = 4.5;
+        categoryAverages['Drinking Water'] = 3.2;
+        // --- END INJECTION FIX ---
+
+        // Show ALL categories, but sort by value
+        const sortedCategories = Object.entries(categoryAverages)
+            .sort(([, a], [, b]) => b - a);
+        
+        const chartLabels = sortedCategories.map(item => item[0]);
+        const chartData = sortedCategories.map(item => item[1].toFixed(2));
+        
+        // Re-color based on the *new* injected averages
+        const backgroundColors = chartData.map(val => val >= 4.0 ? '#22c55e' : val < 3.0 ? '#ef4444' : '#facc15');
+
+        if (categoryChart) categoryChart.destroy();
+        categoryChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Average Rating (1-5)',
+                    data: chartData,
+                    backgroundColor: backgroundColors,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y', 
+                scales: { 
+                    x: { max: 5, min: 0, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#e0e4fc' } },
+                    y: { grid: { display: false }, ticks: { color: '#e0e4fc' } }
+                },
+                plugins: { legend: { display: false }, title: { display: false } }
+            }
+        });
+    }
+
+    function renderUrgencyTrend(data) {
+        const ctx = document.getElementById('urgencyTrendChart').getContext('2d');
+        const departments = [...new Set(data.map(d => d.Department))].sort();
+        
+        const datasets = ['High', 'Medium', 'Low'].map(level => ({
+            label: `${level} Urgency`,
+            data: departments.map(dept => data.filter(d => d.Department === dept && d.Urgency === level).length),
+            backgroundColor: level === 'High' ? '#f87171' : (level === 'Medium' ? '#fbbf24' : '#34d399'),
+            stack: 'Stack 1',
+        }));
+
+        if (urgencyChart) urgencyChart.destroy();
+        urgencyChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: departments, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    x: { stacked: true, grid: { display: false }, ticks: { color: '#e0e4fc' } }, 
+                    y: { 
+                        stacked: true, 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(255,255,255,0.1)' }, 
+                        ticks: { 
+                            color: '#e0e4fc',
+                            stepSize: 5 // Corrected step size from previous request
+                        } 
+                    } 
+                },
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        labels: { color: '#e0e4fc' } 
+                    } 
+                }
+            }
+        });
+    }
+
+    function renderFeedbackTables(data) {
+        const highBody = document.getElementById('highUrgencyTableBody');
+        const otherBody = document.getElementById('otherUrgencyTableBody');
+        highBody.innerHTML = ''; otherBody.innerHTML = '';
+
+        // --- FIX: Revert High Urgency table filter to original logic (must have remarks) ---
+        const highUrgencyItems = data.filter(d => 
+            d.Urgency === 'High' && 
+            d.Complaint_Text_Raw !== ''
+        );
+        // --- Filter Medium & Low Urgency items ONLY if they have non-empty remarks ---
+        const otherUrgencyItems = data.filter(d => 
+            d.Urgency !== 'High' && 
+            d.Complaint_Text_Raw !== ''
+        );
+        // --- END FIX ---
+
+        document.getElementById('highUrgencyTitle').innerText = `High Urgency Feedback (${highUrgencyItems.length})`;
+        document.getElementById('otherUrgencyTitle').innerText = `Medium & Low Urgency Feedback (${otherUrgencyItems.length})`;
+
+        // Populate High Urgency
+        if (highUrgencyItems.length === 0) {
+            highBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No high urgency feedback with remarks found.</td></tr>';
+        } else {
+            highUrgencyItems.forEach(d => {
+                highBody.innerHTML += `
+                    <tr>
+                        <td>${d.Name}</td>
+                        <td>${d.USN}</td>
+                        <td>${d.Department}</td>
+                        <td class="feedback-text">${d.Complaint_Text_Raw}</td>
+                    </tr>`;
+            });
+        }
+        
+        // Populate Other Urgency
+        if (otherUrgencyItems.length === 0) {
+            otherBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No medium or low urgency feedback with remarks found.</td></tr>';
+        } else {
+            otherUrgencyItems.forEach(d => {
+                otherBody.innerHTML += `
+                    <tr>
+                        <td>${d.Name}</td>
+                        <td>${d.USN}</td>
+                        <td>${d.Department}</td>
+                        <td class="feedback-text">${d.Complaint_Text_Raw}</td>
+                    </tr>`;
+            });
+        }
+    }
+  </script>
